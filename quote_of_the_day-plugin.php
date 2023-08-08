@@ -90,21 +90,67 @@ function quote_of_the_day_plugin_admin_menu()
 		'quote-of-the-day-localisation-settings',
 		'quote_of_the_day_plugin_localisation_settings_page'
 	);
+
+	// Add a submenu page for toggling the Quotes menu
+	add_submenu_page(
+		'quote-of-the-day-settings',
+		'Toggle Quotes Menu',
+		'Toggle Quotes Menu',
+		'manage_options',
+		'quote-of-the-day-toggle-menu',
+		'quote_of_the_day_plugin_toggle_menu_page'
+	);
+
+	// Enqueue JavaScript for the toggle button
+	add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
 }
 add_action('admin_menu', 'quote_of_the_day_plugin_admin_menu');
 
+///////////////////////////////////////////////////
 // Main Settings Page Callback
 function quote_of_the_day_plugin_settings_page()
 {
+	// Update the Quotes menu status based on the toggle button
+	if (isset($_POST['quote_menu_enabled'])) {
+		update_option('quote_menu_enabled', true);
+	} else {
+		update_option('quote_menu_enabled', false);
+	}
+
 ?>
 	<div class="wrap">
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 		<p><?php esc_html_e('Welcome to the Quote Settings! Here you can manage various options for the Quote of the Day plugin.', 'quote_of_the_day_plugin_domain'); ?></p>
-		<!-- Add your main settings page HTML here -->
+
+		<!-- ON/OFF switch button for Quotes menu -->
+		<form method="post" action="">
+			<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked(get_option('quote_menu_enabled', true), true); ?>>
+			<label for="quote_menu_enabled" class="bootstrap-switch-label">
+				<?php esc_html_e('Enable Quotes Menu', 'quote_of_the_day_plugin_domain'); ?>
+			</label>
+			<p class="submit">
+				<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save Changes', 'quote_of_the_day_plugin_domain'); ?>">
+			</p>
+		</form>
 	</div>
 <?php
 }
 
+
+// Enqueue JavaScript for the toggle button
+function quote_of_the_day_toggle_menu_js($hook)
+{
+	if ($hook === 'toplevel_page_quote-of-the-day-settings') {
+		// Enqueue Bootstrap Switch CSS and JS
+		wp_enqueue_style('bootstrap-switch', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css');
+		wp_enqueue_script('bootstrap-switch', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js', array('jquery'), '3.3.4', true);
+
+		// Enqueue your custom JavaScript
+		wp_enqueue_script('quote-of-the-day-toggle-menu', plugin_dir_url(__FILE__) . 'toggle-menu.js', array('jquery'), '1.0', true);
+	}
+}
+
+//////////////////////////////////////////////////////
 // Subpage 1: Duration Settings Callback
 function quote_of_the_day_plugin_duration_settings_page()
 {
@@ -360,7 +406,7 @@ function quote_of_the_day_manage_quotes_menu()
 		'manage_options',
 		'quote-of-the-day-quotes', // Menu Slug
 		'quote_of_the_day_manage_quotes_page', // Callback function to display the content
-		'dashicons-admin-generic', // Icon
+		'dashicons-format-quote', // Icon
 		30 // Position in the admin menu
 	);
 }
