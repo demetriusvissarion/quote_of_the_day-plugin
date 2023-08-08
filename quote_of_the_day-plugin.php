@@ -91,16 +91,6 @@ function quote_of_the_day_plugin_admin_menu()
 		'quote_of_the_day_plugin_localisation_settings_page'
 	);
 
-	// Add a submenu page for toggling the Quotes menu
-	add_submenu_page(
-		'quote-of-the-day-settings',
-		'Toggle Quotes Menu',
-		'Toggle Quotes Menu',
-		'manage_options',
-		'quote-of-the-day-toggle-menu',
-		'quote_of_the_day_plugin_toggle_menu_page'
-	);
-
 	// Enqueue JavaScript for the toggle button
 	add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
 }
@@ -110,12 +100,11 @@ add_action('admin_menu', 'quote_of_the_day_plugin_admin_menu');
 // Main Settings Page Callback
 function quote_of_the_day_plugin_settings_page()
 {
-	// Update the Quotes menu status based on the toggle button
 	if (isset($_POST['quote_menu_enabled'])) {
-		update_option('quote_menu_enabled', true);
-	} else {
-		update_option('quote_menu_enabled', false);
+		update_option('quote_menu_enabled', $_POST['quote_menu_enabled'] ? true : false);
 	}
+
+	$quote_menu_enabled = get_option('quote_menu_enabled', true);
 
 ?>
 	<div class="wrap">
@@ -124,9 +113,10 @@ function quote_of_the_day_plugin_settings_page()
 
 		<!-- ON/OFF switch button for Quotes menu -->
 		<form method="post" action="">
-			<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked(get_option('quote_menu_enabled', true), true); ?>>
-			<label for="quote_menu_enabled" class="bootstrap-switch-label">
-				<?php esc_html_e('Enable Quotes Menu', 'quote_of_the_day_plugin_domain'); ?>
+			<input type="hidden" name="quote_menu_enabled" value="0">
+			<label class="bootstrap-switch-label">
+				<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked($quote_menu_enabled, true); ?>>
+				<?php esc_html_e('Quotes Management Menu', 'quote_of_the_day_plugin_domain'); ?>
 			</label>
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save Changes', 'quote_of_the_day_plugin_domain'); ?>">
@@ -135,6 +125,7 @@ function quote_of_the_day_plugin_settings_page()
 	</div>
 <?php
 }
+
 
 
 // Enqueue JavaScript for the toggle button
@@ -394,12 +385,14 @@ function quote_of_the_day_plugin_quotes_page()
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 		<!-- Add your HTML and logic here to display and manage quotes -->
 	</div>
-<?php
+	<?php
 }
 
 // Create the admin panel page for managing quotes
 function quote_of_the_day_manage_quotes_menu()
 {
+	$quote_menu_enabled = get_option('quote_menu_enabled', true);
+
 	add_menu_page(
 		'Quotes',                // Page Title
 		'Quotes',                // Menu Title
@@ -409,54 +402,63 @@ function quote_of_the_day_manage_quotes_menu()
 		'dashicons-format-quote', // Icon
 		30 // Position in the admin menu
 	);
+
+	if (!$quote_menu_enabled) {
+		remove_menu_page('quote-of-the-day-quotes');
+	}
 }
 add_action('admin_menu', 'quote_of_the_day_manage_quotes_menu');
+
 
 // Callback function to display the quotes admin page
 function quote_of_the_day_manage_quotes_page()
 {
-?>
-	<div class="wrap">
-		<h1 class="wp-heading-inline"><?php echo esc_html__('Quotes', 'quote_of_the_day_plugin_domain'); ?></h1>
-		<a href="<?php echo admin_url('post-new.php?post_type=quote'); ?>" class="page-title-action">
-			<?php echo esc_html__('Add New', 'quote_of_the_day_plugin_domain'); ?>
-		</a>
-		<?php
-		$args = array(
-			'post_type'      => 'quote',
-			'posts_per_page' => -1,
-		);
+	$quote_menu_enabled = get_option('quote_menu_enabled', true);
 
-		$quotes = get_posts($args);
+	if ($quote_menu_enabled) {
+	?>
+		<div class="wrap">
+			<h1 class="wp-heading-inline"><?php echo esc_html__('Quotes', 'quote_of_the_day_plugin_domain'); ?></h1>
+			<a href="<?php echo admin_url('post-new.php?post_type=quote'); ?>" class="page-title-action">
+				<?php echo esc_html__('Add New', 'quote_of_the_day_plugin_domain'); ?>
+			</a>
+			<?php
+			$args = array(
+				'post_type'      => 'quote',
+				'posts_per_page' => -1,
+			);
 
-		if ($quotes) {
-			echo '<table class="wp-list-table widefat fixed striped">';
-			echo '<thead><tr>';
-			echo '<th>' . esc_html__('Title', 'quote_of_the_day_plugin_domain') . '</th>';
-			echo '<th>' . esc_html__('Author', 'quote_of_the_day_plugin_domain') . '</th>';
-			echo '<th>' . esc_html__('Date', 'quote_of_the_day_plugin_domain') . '</th>';
-			echo '<th></th>';
-			echo '</tr></thead>';
-			echo '<tbody>';
+			$quotes = get_posts($args);
 
-			foreach ($quotes as $quote) {
-				echo '<tr>';
-				echo '<td>' . esc_html(get_the_title($quote)) . '</td>';
-				echo '<td>' . esc_html(get_the_author_meta('display_name', $quote->post_author)) . '</td>';
-				echo '<td>' . esc_html(get_the_date('', $quote)) . '</td>';
-				echo '<td>';
-				echo '<a href="' . get_edit_post_link($quote->ID) . '">' . esc_html__('Edit', 'quote_of_the_day_plugin_domain') . '</a> | ';
-				echo '<a href="' . get_delete_post_link($quote->ID) . '" class="submitdelete">' . esc_html__('Delete', 'quote_of_the_day_plugin_domain') . '</a>';
-				echo '</td>';
-				echo '</tr>';
+			if ($quotes) {
+				echo '<table class="wp-list-table widefat fixed striped">';
+				echo '<thead><tr>';
+				echo '<th>' . esc_html__('Title', 'quote_of_the_day_plugin_domain') . '</th>';
+				echo '<th>' . esc_html__('Author', 'quote_of_the_day_plugin_domain') . '</th>';
+				echo '<th>' . esc_html__('Date', 'quote_of_the_day_plugin_domain') . '</th>';
+				echo '<th></th>';
+				echo '</tr></thead>';
+				echo '<tbody>';
+
+				foreach ($quotes as $quote) {
+					echo '<tr>';
+					echo '<td>' . esc_html(get_the_title($quote)) . '</td>';
+					echo '<td>' . esc_html(get_the_author_meta('display_name', $quote->post_author)) . '</td>';
+					echo '<td>' . esc_html(get_the_date('', $quote)) . '</td>';
+					echo '<td>';
+					echo '<a href="' . get_edit_post_link($quote->ID) . '">' . esc_html__('Edit', 'quote_of_the_day_plugin_domain') . '</a> | ';
+					echo '<a href="' . get_delete_post_link($quote->ID) . '" class="submitdelete">' . esc_html__('Delete', 'quote_of_the_day_plugin_domain') . '</a>';
+					echo '</td>';
+					echo '</tr>';
+				}
+
+				echo '</tbody>';
+				echo '</table>';
+			} else {
+				echo esc_html__('No quotes found.', 'quote_of_the_day_plugin_domain');
 			}
-
-			echo '</tbody>';
-			echo '</table>';
-		} else {
-			echo esc_html__('No quotes found.', 'quote_of_the_day_plugin_domain');
-		}
-		?>
-	</div>
+			?>
+		</div>
 <?php
+	}
 }

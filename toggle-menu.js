@@ -1,5 +1,4 @@
 jQuery(document).ready(function ($) {
-  // Initialize the Bootstrap Switch
   $("#quote_menu_enabled").bootstrapSwitch({
     size: "small",
     onText: "ON",
@@ -9,7 +8,6 @@ jQuery(document).ready(function ($) {
     labelText: " ",
     handleWidth: 40,
     onSwitchChange: function (event, state) {
-      // Submit the form when the switch is toggled
       $(this).closest("form").submit();
     },
   });
