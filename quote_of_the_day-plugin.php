@@ -46,86 +46,182 @@ defined('ABSPATH') or die("Hello there");
 // }
 // add_action('admin_enqueue_scripts', 'quote_of_the_day_plugin_enqueue_styles');
 
-// Create the admin panel page
+///////////////////////////////////////////////////////
+// Create the admin panel page and subpages
 function quote_of_the_day_plugin_admin_menu()
 {
+	// Main Settings Page
 	add_menu_page(
-		'Widget: Quote of the Day',
-		'Widget: Quote of the Day',
+		'Quote Settings',
+		'Quote Settings',
 		'manage_options',
 		'quote-of-the-day-settings',
-		'quote_of_the_day_plugin_settings_page'
+		'quote_of_the_day_plugin_settings_page',
+		'dashicons-admin-generic', // Icon
+		100 // Position in the admin menu
+	);
+
+	// Subpage 1: Duration Settings
+	add_submenu_page(
+		'quote-of-the-day-settings',
+		'Duration',
+		'Duration',
+		'manage_options',
+		'quote-of-the-day-duration-settings',
+		'quote_of_the_day_plugin_duration_settings_page'
+	);
+
+	// Subpage 2: Short Code Settings
+	add_submenu_page(
+		'quote-of-the-day-settings',
+		'Short Code',
+		'Short Code',
+		'manage_options',
+		'quote-of-the-day-shortcode-settings',
+		'quote_of_the_day_plugin_shortcode_settings_page'
+	);
+
+	// Subpage 3: Localisation Support Settings
+	add_submenu_page(
+		'quote-of-the-day-settings',
+		'Localisation Support',
+		'Localisation Support',
+		'manage_options',
+		'quote-of-the-day-localisation-settings',
+		'quote_of_the_day_plugin_localisation_settings_page'
 	);
 }
 add_action('admin_menu', 'quote_of_the_day_plugin_admin_menu');
 
-// Admin settings page callback
+// Main Settings Page Callback
 function quote_of_the_day_plugin_settings_page()
 {
-	if (!current_user_can('manage_options')) {
-		return;
-	}
-
-	// Save the quote when the form is submitted
-	if (isset($_POST['quote_of_the_day_submit'])) {
-		// Verify the nonce to ensure security
-		if (!isset($_POST['quote_of_the_day_nonce']) || !wp_verify_nonce($_POST['quote_of_the_day_nonce'], 'quote_of_the_day_settings')) {
-			wp_die('Invalid nonce.');
-		}
-
-		$quote = isset($_POST['quote']) ? sanitize_textarea_field($_POST['quote']) : '';
-		update_option('quote_of_the_day', $quote);
-	}
-
-	// Retrieve the saved quote
-	$saved_quote = get_option('quote_of_the_day', '');
-
-	// Display the settings page HTML
 ?>
 	<div class="wrap">
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-		<form method="post">
-			<label for="quote"><?php esc_html_e('Quote:', 'quote_of_the_day_plugin_domain'); ?></label>
-			<textarea class="large-text" rows="5" cols="50" id="quote" name="quote"><?php echo esc_textarea($saved_quote); ?></textarea>
-			<?php wp_nonce_field('quote_of_the_day_settings', 'quote_of_the_day_nonce'); ?>
-			<input type="submit" name="quote_of_the_day_submit" class="button button-primary" value="<?php esc_attr_e('Save', 'quote_of_the_day_plugin_domain'); ?>" />
+		<p><?php esc_html_e('Welcome to the Quote Settings! Here you can manage various options for the Quote of the Day plugin.', 'quote_of_the_day_plugin_domain'); ?></p>
+		<!-- Add your main settings page HTML here -->
+	</div>
+<?php
+}
+
+// Subpage 1: Duration Settings Callback
+function quote_of_the_day_plugin_duration_settings_page()
+{
+?>
+	<div class="wrap">
+		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+		<form method="post" action="options.php">
+			<?php
+			settings_fields('quote_of_the_day_duration_group');
+			do_settings_sections('quote-of-the-day-duration-settings');
+			submit_button();
+			?>
 		</form>
+	</div>
+<?php
+}
+
+function quote_of_the_day_plugin_register_duration_settings()
+{
+	add_settings_section(
+		'quote_of_the_day_duration_section',
+		__('', 'quote_of_the_day_plugin_domain'),
+		'quote_of_the_day_plugin_duration_section_callback',
+		'quote-of-the-day-duration-settings'
+	);
+
+	add_settings_field(
+		'quote_duration',
+		__('Quote Duration', 'quote_of_the_day_plugin_domain'),
+		'quote_of_the_day_plugin_duration_field_callback',
+		'quote-of-the-day-duration-settings',
+		'quote_of_the_day_duration_section'
+	);
+
+	register_setting('quote_of_the_day_duration_group', 'quote_duration', 'quote_of_the_day_validate_duration');
+}
+add_action('admin_init', 'quote_of_the_day_plugin_register_duration_settings');
+
+function quote_of_the_day_plugin_duration_section_callback()
+{
+	echo '<p>' . __('Set the duration for changing the quote:', 'quote_of_the_day_plugin_domain') . '</p>';
+}
+
+function quote_of_the_day_plugin_duration_field_callback()
+{
+	$duration = get_option('quote_duration', array('value' => 1, 'unit' => 'hour'));
+
+	echo '<input type="number" min="1" name="quote_duration[value]" value="' . esc_attr($duration['value']) . '" />';
+	echo '<select name="quote_duration[unit]">';
+	echo '<option value="hour"' . selected('hour', $duration['unit'], false) . '>' . __('Hours', 'quote_of_the_day_plugin_domain') . '</option>';
+	echo '<option value="day"' . selected('day', $duration['unit'], false) . '>' . __('Days', 'quote_of_the_day_plugin_domain') . '</option>';
+	echo '</select>';
+}
+
+function quote_of_the_day_validate_duration($input)
+{
+	$input['value'] = intval($input['value']);
+	if ($input['value'] < 1) {
+		$input['value'] = 1;
+	}
+	$input['unit'] = in_array($input['unit'], array('hour', 'day')) ? $input['unit'] : 'hour';
+
+	return $input;
+}
+
+// Subpage 2: Short Code Settings Callback
+function quote_of_the_day_plugin_shortcode_settings_page()
+{
+?>
+	<div class="wrap">
+		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+		<p><?php esc_html_e('Copy the following shortcode to display the quote on any page or post:', 'quote_of_the_day_plugin_domain'); ?></p>
+		<code>[quote_of_the_day]</code>
+	</div>
+<?php
+}
+
+// Subpage 3: Localisation Support Settings Callback
+function quote_of_the_day_plugin_localisation_settings_page()
+{
+?>
+	<div class="wrap">
+		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+		<p><?php esc_html_e('The Quote of the Day plugin provides localisation support. You can translate the plugin into different languages by providing translation files (.mo and .po).', 'quote_of_the_day_plugin_domain'); ?></p>
+		<!-- Add your localisation settings page HTML here -->
 	</div>
 	<?php
 }
+/////////////////////////////////////////////////////////////////////////
 
 // Function to sanitize and display a quote
 function quote_of_the_day_plugin_get_random_quote()
 {
-	// Get your list of quotes (you can store them in an array or retrieve from the database)
-	$quotes = array(
-		'The important thing is not to stop questioning. - Albert Einstein',
-		'The good thing about science is that it\'s true whether or not you believe in it. - Neil deGrasse Tyson',
-		'The saddest aspect of life right now is that science gathers knowledge faster than society gathers wisdom. - Isaac Asimov',
-		'The greatest enemy of knowledge is not ignorance, it is the illusion of knowledge. - Stephen Hawking',
-		'The universe is under no obligation to make sense to you. - Neil deGrasse Tyson',
-		'Science is not only a disciple of reason but, also, one of romance and passion. - Stephen Hawking',
-		'The most beautiful thing we can experience is the mysterious. - Albert Einstein',
-		'Somewhere, something incredible is waiting to be known. - Carl Sagan',
-		'We are all connected; To each other, biologically. To the earth, chemically. To the rest of the universe atomically. - Neil deGrasse Tyson',
-		'The cosmos is within us. We are made of star-stuff. We are a way for the universe to know itself. - Carl Sagan',
-		'We are just an advanced breed of monkeys on a minor planet of a very average star. But we can understand the Universe. That makes us something very special. - Stephen Hawking',
-		'The science of today is the technology of tomorrow. - Edward Teller',
-		'Science knows no country because knowledge belongs to humanity, and is the torch which illuminates the world. - Louis Pasteur',
-		'Science is the great antidote to the poison of enthusiasm and superstition. - Adam Smith',
-		'Science is simply common sense at its best, that is, rigidly accurate in observation, and merciless to fallacy in logic. - Thomas Huxley',
-		'The science of government is my duty. - Benjamin Franklin',
-		'The most exciting phrase to hear in science, the one that heralds new discoveries, is not \'Eureka!\' but \'That\'s funny... - Isaac Asimov',
-		'The art and science of asking questions is the source of all knowledge. - Thomas Berger',
-		'I have no special talent. I am only passionately curious. - Albert Einstein',
-		'The more I study science, the more I believe in God. - Albert Einstein'
+	// Get quotes from the 'quote' custom post type
+	$args = array(
+		'post_type'      => 'quote',
+		'posts_per_page' => -1,
 	);
 
-	// Sanitize the random quote before displaying it
-	$random_quote = wp_kses_post($quotes[array_rand($quotes)]);
+	$quote_posts = get_posts($args);
 
-	return $random_quote;
+	if (!$quote_posts) {
+		return ''; // Return empty string if no quotes are found
+	}
+
+	// Get a random quote post
+	$random_quote_post = $quote_posts[array_rand($quote_posts)];
+
+	// Get the content of the quote post
+	$quote_content = apply_filters('the_content', $random_quote_post->post_content);
+
+	// Sanitize the quote content before displaying it
+	$sanitized_quote_content = wp_kses_post($quote_content);
+
+	return $sanitized_quote_content;
 }
+
 
 // Schedule the quote update every hour
 function quote_of_the_day_plugin_schedule_hourly_event()
@@ -179,7 +275,7 @@ class Quote_Of_The_Day_Plugin_Widget extends WP_Widget
 			<label for="<?php echo $this->get_field_id('quote'); ?>"><?php esc_html_e('Quote:', 'quote_of_the_day_plugin_domain'); ?></label>
 			<textarea class="widefat" rows="5" cols="20" id="<?php echo $this->get_field_id('quote'); ?>" name="<?php echo $this->get_field_name('quote'); ?>"><?php echo esc_textarea($current_quote); ?></textarea>
 		</p>
-<?php
+	<?php
 	}
 
 	public function update($new_instance, $old_instance)
@@ -197,3 +293,124 @@ function register_quote_of_the_day_plugin_widget()
 	register_widget('Quote_Of_The_Day_Plugin_Widget');
 }
 add_action('widgets_init', 'register_quote_of_the_day_plugin_widget');
+
+////////////////////////////////////////////////////////////////
+// Register the 'quotes' custom post type
+function quote_of_the_day_plugin_register_post_type()
+{
+	$labels = array(
+		'name'               => __('Quotes', 'quote_of_the_day_plugin_domain'),
+		'singular_name'      => __('Quote', 'quote_of_the_day_plugin_domain'),
+		'menu_name'          => __('Quotes', 'quote_of_the_day_plugin_domain'),
+		'add_new'            => __('Add New', 'quote_of_the_day_plugin_domain'),
+		'add_new_item'       => __('Add New Quote', 'quote_of_the_day_plugin_domain'),
+		'edit'               => __('Edit', 'quote_of_the_day_plugin_domain'),
+		'edit_item'          => __('Edit Quote', 'quote_of_the_day_plugin_domain'),
+		'new_item'           => __('New Quote', 'quote_of_the_day_plugin_domain'),
+		'view'               => __('View Quote', 'quote_of_the_day_plugin_domain'),
+		'view_item'          => __('View Quote', 'quote_of_the_day_plugin_domain'),
+		'search_items'       => __('Search Quotes', 'quote_of_the_day_plugin_domain'),
+		'not_found'          => __('No quotes found', 'quote_of_the_day_plugin_domain'),
+		'not_found_in_trash' => __('No quotes found in Trash', 'quote_of_the_day_plugin_domain'),
+	);
+
+	$args = array(
+		'labels'              => $labels,
+		'public'              => true,
+		'has_archive'         => true,
+		'publicly_queryable'  => true,
+		'query_var'           => true,
+		'rewrite'             => array('slug' => 'quotes'),
+		'capability_type'     => 'post',
+		'hierarchical'        => false,
+		'menu_position'       => 20,
+		'supports'            => array('title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments'),
+		'show_in_menu'        => false,
+	);
+
+	register_post_type('quote', $args);
+}
+add_action('init', 'quote_of_the_day_plugin_register_post_type');
+
+// Create the admin panel page for managing quotes
+function quote_of_the_day_plugin_quotes_page()
+{
+	// Check if the user has the required capability
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+
+	// Handle actions like adding, editing, or deleting quotes
+	// You'll need to implement the logic for these actions here
+
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+		<!-- Add your HTML and logic here to display and manage quotes -->
+	</div>
+<?php
+}
+
+// Create the admin panel page for managing quotes
+function quote_of_the_day_manage_quotes_menu()
+{
+	add_menu_page(
+		'Quotes',                // Page Title
+		'Quotes',                // Menu Title
+		'manage_options',
+		'quote-of-the-day-quotes', // Menu Slug
+		'quote_of_the_day_manage_quotes_page', // Callback function to display the content
+		'dashicons-admin-generic', // Icon
+		30 // Position in the admin menu
+	);
+}
+add_action('admin_menu', 'quote_of_the_day_manage_quotes_menu');
+
+// Callback function to display the quotes admin page
+function quote_of_the_day_manage_quotes_page()
+{
+?>
+	<div class="wrap">
+		<h1 class="wp-heading-inline"><?php echo esc_html__('Quotes', 'quote_of_the_day_plugin_domain'); ?></h1>
+		<a href="<?php echo admin_url('post-new.php?post_type=quote'); ?>" class="page-title-action">
+			<?php echo esc_html__('Add New', 'quote_of_the_day_plugin_domain'); ?>
+		</a>
+		<?php
+		$args = array(
+			'post_type'      => 'quote',
+			'posts_per_page' => -1,
+		);
+
+		$quotes = get_posts($args);
+
+		if ($quotes) {
+			echo '<table class="wp-list-table widefat fixed striped">';
+			echo '<thead><tr>';
+			echo '<th>' . esc_html__('Title', 'quote_of_the_day_plugin_domain') . '</th>';
+			echo '<th>' . esc_html__('Author', 'quote_of_the_day_plugin_domain') . '</th>';
+			echo '<th>' . esc_html__('Date', 'quote_of_the_day_plugin_domain') . '</th>';
+			echo '<th></th>';
+			echo '</tr></thead>';
+			echo '<tbody>';
+
+			foreach ($quotes as $quote) {
+				echo '<tr>';
+				echo '<td>' . esc_html(get_the_title($quote)) . '</td>';
+				echo '<td>' . esc_html(get_the_author_meta('display_name', $quote->post_author)) . '</td>';
+				echo '<td>' . esc_html(get_the_date('', $quote)) . '</td>';
+				echo '<td>';
+				echo '<a href="' . get_edit_post_link($quote->ID) . '">' . esc_html__('Edit', 'quote_of_the_day_plugin_domain') . '</a> | ';
+				echo '<a href="' . get_delete_post_link($quote->ID) . '" class="submitdelete">' . esc_html__('Delete', 'quote_of_the_day_plugin_domain') . '</a>';
+				echo '</td>';
+				echo '</tr>';
+			}
+
+			echo '</tbody>';
+			echo '</table>';
+		} else {
+			echo esc_html__('No quotes found.', 'quote_of_the_day_plugin_domain');
+		}
+		?>
+	</div>
+<?php
+}
