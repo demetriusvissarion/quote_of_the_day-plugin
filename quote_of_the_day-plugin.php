@@ -100,25 +100,44 @@ add_action('admin_menu', 'quote_of_the_day_plugin_admin_menu');
 // Main Settings Page Callback
 function quote_of_the_day_plugin_settings_page()
 {
-	if (isset($_POST['quote_menu_enabled'])) {
-		update_option('quote_menu_enabled', $_POST['quote_menu_enabled'] ? true : false);
+	if (isset($_POST['quote_menu_enabled']) || isset($_POST['quote_widget_enabled'])) {
+		update_option('quote_menu_enabled', isset($_POST['quote_menu_enabled']) ? true : false);
+		update_option('quote_widget_enabled', isset($_POST['quote_widget_enabled']) ? true : false);
 		add_settings_error('quote_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
 	}
 
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
-
+	$quote_widget_enabled = get_option('quote_widget_enabled', true);
 ?>
+
 	<div class="wrap">
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 		<p><?php esc_html_e('Welcome to the Quote Settings! Here you can manage various options for the Quote of the Day plugin.', 'quote_of_the_day_plugin_domain'); ?></p>
 
-		<!-- ON/OFF switch button for Quotes menu -->
 		<form method="post" action="">
-			<input type="hidden" name="quote_menu_enabled" value="0">
+			<!-- ON/OFF switch button for Quotes Management Menu -->
 			<label class="bootstrap-switch-label">
-				<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked($quote_menu_enabled, true); ?>>
+				<input type="hidden" name="quote_menu_enabled" value="0">
+				<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked($quote_menu_enabled, '1'); ?>>
 				<?php esc_html_e('Quotes Management Menu', 'quote_of_the_day_plugin_domain'); ?>
 			</label>
+
+			<!-- ON/OFF switch button for Quotes Widget -->
+			<p>
+				<label class="bootstrap-switch-label">
+					<!-- Hidden input to handle unchecked state -->
+					<input type="hidden" name="<?php echo esc_attr('quote_widget_enabled'); ?>" value="0">
+
+					<!-- Actual switch input -->
+					<input type="checkbox" id="<?php echo esc_attr('quote_widget_enabled'); ?>" name="<?php echo esc_attr('quote_widget_enabled'); ?>" value="1" <?php checked(get_option('quote_widget_enabled', true), true); ?>>
+
+					<?php esc_html_e('Quotes Widget', 'quote_of_the_day_plugin_domain'); ?>
+				</label>
+			</p>
+
+
+
+
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save Changes', 'quote_of_the_day_plugin_domain'); ?>">
 			</p>
@@ -130,6 +149,7 @@ function quote_of_the_day_plugin_settings_page()
 
 
 
+/////////////////////////////////////////////////////////
 // Enqueue JavaScript for the toggle button
 function quote_of_the_day_toggle_menu_js($hook)
 {
@@ -142,6 +162,10 @@ function quote_of_the_day_toggle_menu_js($hook)
 		wp_enqueue_script('quote-of-the-day-toggle-menu', plugin_dir_url(__FILE__) . 'toggle-menu.js', array('jquery'), '1.0', true);
 	}
 }
+
+// Enqueue the toggle menu JavaScript in the existing function
+add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
+
 
 //////////////////////////////////////////////////////
 // Subpage 1: Duration Settings Callback
@@ -307,29 +331,33 @@ class Quote_Of_The_Day_Plugin_Widget extends WP_Widget
 		);
 	}
 
-
 	public function widget($args, $instance)
 	{
-		$quote = get_transient('quote_of_the_day_transient');
+		$quote_widget_enabled = get_option('quote_widget_enabled', true);
 
-		if (false === $quote) {
-			$quote = quote_of_the_day_plugin_get_random_quote();
-			$duration = get_option('quote_duration', array('day' => 0, 'hour' => 0, 'minute' => 0));
+		if ($quote_widget_enabled) {
+			$quote = get_transient('quote_of_the_day_transient');
 
-			$expiration = $duration['day'] * 86400 + $duration['hour'] * 3600 + $duration['minute'] * 60;
-			set_transient('quote_of_the_day_transient', $quote, $expiration);
+			if (false === $quote) {
+				$quote = quote_of_the_day_plugin_get_random_quote();
+				$duration = get_option('quote_duration', array('day' => 0, 'hour' => 0, 'minute' => 0));
+
+				$expiration = $duration['day'] * 86400 + $duration['hour'] * 3600 + $duration['minute'] * 60;
+				set_transient('quote_of_the_day_transient', $quote, $expiration);
+			}
+
+			echo $args['before_widget'];
+			echo $args['before_title'] . esc_html__('Widget: Quote of the Day', 'quote_of_the_day_plugin_domain') . $args['after_title'];
+			echo '<div class="quote">' . wp_kses_post($quote) . '</div>';
+			echo $args['after_widget'];
 		}
-
-		echo $args['before_widget'];
-		echo $args['before_title'] . esc_html__('Widget: Quote of the Day', 'quote_of_the_day_plugin_domain') . $args['after_title'];
-		echo '<div class="quote">' . wp_kses_post($quote) . '</div>';
-		echo $args['after_widget'];
 	}
 
 	public function form($instance)
 	{
 		// Retrieve the currently saved widget settings
 		$current_quote = isset($instance['quote']) ? $instance['quote'] : '';
+		$widget_option = get_option('quote_widget_enabled', true);
 
 		// Display the widget settings form
 	?>
@@ -337,8 +365,15 @@ class Quote_Of_The_Day_Plugin_Widget extends WP_Widget
 			<label for="<?php echo $this->get_field_id('quote'); ?>"><?php esc_html_e('Quote:', 'quote_of_the_day_plugin_domain'); ?></label>
 			<textarea class="widefat" rows="5" cols="20" id="<?php echo $this->get_field_id('quote'); ?>" name="<?php echo $this->get_field_name('quote'); ?>"><?php echo esc_textarea($current_quote); ?></textarea>
 		</p>
+		<p>
+			<label class="bootstrap-switch-label">
+				<input type="checkbox" id="<?php echo $this->get_field_id('widget_enabled'); ?>" name="<?php echo $this->get_field_name('widget_enabled'); ?>" value="1" <?php checked($widget_option, true); ?>>
+				<?php esc_html_e('Quotes Widget', 'quote_of_the_day_plugin_domain'); ?>
+			</label>
+		</p>
 	<?php
 	}
+
 
 	public function update($new_instance, $old_instance)
 	{

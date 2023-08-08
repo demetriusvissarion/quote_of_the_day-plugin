@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-  $("#quote_menu_enabled").bootstrapSwitch({
+  $("#quote_menu_enabled, #quote_widget_enabled").bootstrapSwitch({
     size: "small",
     onText: "ON",
     offText: "OFF",
