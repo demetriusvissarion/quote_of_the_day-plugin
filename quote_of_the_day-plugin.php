@@ -102,6 +102,7 @@ function quote_of_the_day_plugin_settings_page()
 {
 	if (isset($_POST['quote_menu_enabled'])) {
 		update_option('quote_menu_enabled', $_POST['quote_menu_enabled'] ? true : false);
+		add_settings_error('quote_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
 	}
 
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
@@ -122,6 +123,7 @@ function quote_of_the_day_plugin_settings_page()
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save Changes', 'quote_of_the_day_plugin_domain'); ?>">
 			</p>
 		</form>
+		<?php settings_errors('quote_settings'); ?>
 	</div>
 <?php
 }
@@ -145,9 +147,15 @@ function quote_of_the_day_toggle_menu_js($hook)
 // Subpage 1: Duration Settings Callback
 function quote_of_the_day_plugin_duration_settings_page()
 {
+	// Check if settings were saved and display a success message
+	if (isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true') {
+		add_settings_error('quote_duration_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
+	}
+
 ?>
 	<div class="wrap">
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+		<?php settings_errors('quote_duration_settings'); ?>
 		<form method="post" action="options.php">
 			<?php
 			settings_fields('quote_of_the_day_duration_group');
@@ -169,11 +177,30 @@ function quote_of_the_day_plugin_register_duration_settings()
 	);
 
 	add_settings_field(
-		'quote_duration',
-		__('Quote Duration', 'quote_of_the_day_plugin_domain'),
+		'quote_duration_days',
+		__('Quote Display Duration (Days)', 'quote_of_the_day_plugin_domain'),
 		'quote_of_the_day_plugin_duration_field_callback',
 		'quote-of-the-day-duration-settings',
-		'quote_of_the_day_duration_section'
+		'quote_of_the_day_duration_section',
+		array('unit' => 'day')
+	);
+
+	add_settings_field(
+		'quote_duration_hours',
+		__('Quote Display Duration (Hours)', 'quote_of_the_day_plugin_domain'),
+		'quote_of_the_day_plugin_duration_field_callback',
+		'quote-of-the-day-duration-settings',
+		'quote_of_the_day_duration_section',
+		array('unit' => 'hour')
+	);
+
+	add_settings_field(
+		'quote_duration_minutes',
+		__('Quote Display Duration (Minutes)', 'quote_of_the_day_plugin_domain'),
+		'quote_of_the_day_plugin_duration_field_callback',
+		'quote-of-the-day-duration-settings',
+		'quote_of_the_day_duration_section',
+		array('unit' => 'minute')
 	);
 
 	register_setting('quote_of_the_day_duration_group', 'quote_duration', 'quote_of_the_day_validate_duration');
@@ -185,28 +212,15 @@ function quote_of_the_day_plugin_duration_section_callback()
 	echo '<p>' . __('Set the duration for changing the quote:', 'quote_of_the_day_plugin_domain') . '</p>';
 }
 
-function quote_of_the_day_plugin_duration_field_callback()
+function quote_of_the_day_plugin_duration_field_callback($args)
 {
-	$duration = get_option('quote_duration', array('value' => 1, 'unit' => 'hour'));
+	$duration = get_option('quote_duration', array('day' => 0, 'hour' => 0, 'minute' => 0));
+	$value = isset($duration[$args['unit']]) ? $duration[$args['unit']] : 0;
 
-	echo '<input type="number" min="1" name="quote_duration[value]" value="' . esc_attr($duration['value']) . '" />';
-	echo '<select name="quote_duration[unit]">';
-	echo '<option value="hour"' . selected('hour', $duration['unit'], false) . '>' . __('Hours', 'quote_of_the_day_plugin_domain') . '</option>';
-	echo '<option value="day"' . selected('day', $duration['unit'], false) . '>' . __('Days', 'quote_of_the_day_plugin_domain') . '</option>';
-	echo '</select>';
+	echo '<input type="number" min="0" name="quote_duration[' . esc_attr($args['unit']) . ']" value="' . esc_attr($value) . '" />';
 }
 
-function quote_of_the_day_validate_duration($input)
-{
-	$input['value'] = intval($input['value']);
-	if ($input['value'] < 1) {
-		$input['value'] = 1;
-	}
-	$input['unit'] = in_array($input['unit'], array('hour', 'day')) ? $input['unit'] : 'hour';
-
-	return $input;
-}
-
+/////////////////////////////////////////////////////////////////
 // Subpage 2: Short Code Settings Callback
 function quote_of_the_day_plugin_shortcode_settings_page()
 {
@@ -293,11 +307,22 @@ class Quote_Of_The_Day_Plugin_Widget extends WP_Widget
 		);
 	}
 
+
 	public function widget($args, $instance)
 	{
+		$quote = get_transient('quote_of_the_day_transient');
+
+		if (false === $quote) {
+			$quote = quote_of_the_day_plugin_get_random_quote();
+			$duration = get_option('quote_duration', array('day' => 0, 'hour' => 0, 'minute' => 0));
+
+			$expiration = $duration['day'] * 86400 + $duration['hour'] * 3600 + $duration['minute'] * 60;
+			set_transient('quote_of_the_day_transient', $quote, $expiration);
+		}
+
 		echo $args['before_widget'];
 		echo $args['before_title'] . esc_html__('Widget: Quote of the Day', 'quote_of_the_day_plugin_domain') . $args['after_title'];
-		echo '<div class="quote-of-the-day">' . quote_of_the_day_plugin_get_random_quote() . '</div>';
+		echo '<div class="quote">' . wp_kses_post($quote) . '</div>';
 		echo $args['after_widget'];
 	}
 
@@ -395,7 +420,7 @@ function quote_of_the_day_manage_quotes_menu()
 
 	add_menu_page(
 		'Quotes',                // Page Title
-		'Quotes',                // Menu Title
+		'Quotes Management',                // Menu Title
 		'manage_options',
 		'quote-of-the-day-quotes', // Menu Slug
 		'quote_of_the_day_manage_quotes_page', // Callback function to display the content
