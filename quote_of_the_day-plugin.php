@@ -36,13 +36,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+// ob_start();
+
 // If this file is called directly, abort
 defined('ABSPATH') or die("Hello there");
 
 // Include other plugin files
-require_once plugin_dir_path(__FILE__) . 'admin-menu.php';
 require_once plugin_dir_path(__FILE__) . 'enqueue-scripts.php';
+require_once plugin_dir_path(__FILE__) . 'settings-menu.php';
 require_once plugin_dir_path(__FILE__) . 'quote-functions.php';
-require_once plugin_dir_path(__FILE__) . 'quotes-management.php';
-require_once plugin_dir_path(__FILE__) . 'update-widget-option.php';
 require_once plugin_dir_path(__FILE__) . 'widget-class.php';
+require_once plugin_dir_path(__FILE__) . 'update-widget-option.php';
+require_once plugin_dir_path(__FILE__) . 'quotes-management.php';
+
+// ob_end_flush();

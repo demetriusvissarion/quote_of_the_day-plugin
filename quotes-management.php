@@ -4,6 +4,8 @@
  * Quote of the Day Plugin - Quotes Management
  */
 
+// ob_start();
+
 // If this file is called directly, abort
 defined('ABSPATH') or die("Hello there");
 
@@ -46,25 +48,6 @@ function quote_of_the_day_plugin_register_post_type()
 add_action('init', 'quote_of_the_day_plugin_register_post_type');
 
 // Create the admin panel page for managing quotes
-function quote_of_the_day_plugin_quotes_page()
-{
-	// Check if the user has the required capability
-	if (!current_user_can('manage_options')) {
-		return;
-	}
-
-	// Handle actions like adding, editing, or deleting quotes
-	// You'll need to implement the logic for these actions here
-
-?>
-	<div class="wrap">
-		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-		<!-- Add your HTML and logic here to display and manage quotes -->
-	</div>
-	<?php
-}
-
-// Create the admin panel page for managing quotes
 function quote_of_the_day_manage_quotes_menu()
 {
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
@@ -92,7 +75,7 @@ function quote_of_the_day_manage_quotes_page()
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
 
 	if ($quote_menu_enabled) {
-	?>
+?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php echo esc_html__('Quotes', 'quote_of_the_day_plugin_domain'); ?></h1>
 			<a href="<?php echo admin_url('post-new.php?post_type=quote'); ?>" class="page-title-action">
@@ -138,3 +121,7 @@ function quote_of_the_day_manage_quotes_page()
 <?php
 	}
 }
+
+// ob_end_flush();
+
+?>

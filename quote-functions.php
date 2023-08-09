@@ -4,6 +4,8 @@
  * Quote of the Day Plugin - Quote Functions
  */
 
+// ob_start();
+
 // If this file is called directly, abort
 defined('ABSPATH') or die("Hello there");
 
@@ -60,3 +62,5 @@ add_action('quote_of_the_day_update', 'quote_of_the_day_plugin_update_quote');
 // {
 // 	return get_option('quote_of_the_day', '');
 // }
+
+// ob_end_flush();
