@@ -81,16 +81,6 @@ function quote_of_the_day_plugin_admin_menu()
 		'quote_of_the_day_plugin_shortcode_settings_page'
 	);
 
-	// Subpage 3: Localisation Support Settings
-	add_submenu_page(
-		'quote-of-the-day-settings',
-		'Localisation Support',
-		'Localisation Support',
-		'manage_options',
-		'quote-of-the-day-localisation-settings',
-		'quote_of_the_day_plugin_localisation_settings_page'
-	);
-
 	// Enqueue JavaScript for the toggle button
 	add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
 }
@@ -100,43 +90,51 @@ add_action('admin_menu', 'quote_of_the_day_plugin_admin_menu');
 // Main Settings Page Callback
 function quote_of_the_day_plugin_settings_page()
 {
-	if (isset($_POST['quote_menu_enabled']) || isset($_POST['quote_widget_enabled'])) {
-		update_option('quote_menu_enabled', isset($_POST['quote_menu_enabled']) ? true : false);
-		update_option('quote_widget_enabled', isset($_POST['quote_widget_enabled']) ? true : false);
-		add_settings_error('quote_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
-	}
-
+	// Get the current options from the database
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
 	$quote_widget_enabled = get_option('quote_widget_enabled', true);
-?>
 
+	// Check if the form was submitted
+	if (isset($_POST['submit'])) {
+		// Check if there are changes
+		if (isset($_POST['quote_menu_enabled']) || isset($_POST['quote_widget_enabled'])) {
+			// Update the options in the database
+			update_option('quote_menu_enabled', $_POST['quote_menu_enabled'] ? true : false);
+			update_option('quote_widget_enabled', $_POST['quote_widget_enabled'] ? true : false);
+
+			add_settings_error('quote_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
+		} else {
+			add_settings_error('quote_settings', 'no_changes', __('No changes were made.', 'quote_of_the_day_plugin_domain'), 'error');
+		}
+
+		$quote_menu_enabled = get_option('quote_menu_enabled', true);
+		$quote_widget_enabled = get_option('quote_widget_enabled', true);
+	}
+?>
 	<div class="wrap">
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 		<p><?php esc_html_e('Welcome to the Quote Settings! Here you can manage various options for the Quote of the Day plugin.', 'quote_of_the_day_plugin_domain'); ?></p>
 
 		<form method="post" action="">
+			<?php wp_nonce_field('quote_settings_nonce', 'quote_settings_nonce'); ?>
+
 			<!-- ON/OFF switch button for Quotes Management Menu -->
-			<label class="bootstrap-switch-label">
-				<input type="hidden" name="quote_menu_enabled" value="0">
-				<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked($quote_menu_enabled, '1'); ?>>
-				<?php esc_html_e('Quotes Management Menu', 'quote_of_the_day_plugin_domain'); ?>
-			</label>
+			<p>
+				<label class="bootstrap-switch-label">
+					<input type="hidden" name="quote_menu_enabled" value="0">
+					<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked($quote_menu_enabled, true); ?>>
+					<?php esc_html_e('Quotes Management Menu', 'quote_of_the_day_plugin_domain'); ?>
+				</label>
+			</p>
 
 			<!-- ON/OFF switch button for Quotes Widget -->
 			<p>
 				<label class="bootstrap-switch-label">
-					<!-- Hidden input to handle unchecked state -->
-					<input type="hidden" name="<?php echo esc_attr('quote_widget_enabled'); ?>" value="0">
-
-					<!-- Actual switch input -->
-					<input type="checkbox" id="<?php echo esc_attr('quote_widget_enabled'); ?>" name="<?php echo esc_attr('quote_widget_enabled'); ?>" value="1" <?php checked(get_option('quote_widget_enabled', true), true); ?>>
-
+					<input type="hidden" name="quote_widget_enabled" value="0">
+					<input type="checkbox" id="quote_widget_enabled" name="quote_widget_enabled" value="1" <?php checked($quote_widget_enabled, true); ?>>
 					<?php esc_html_e('Quotes Widget', 'quote_of_the_day_plugin_domain'); ?>
 				</label>
 			</p>
-
-
-
 
 			<p class="submit">
 				<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save Changes', 'quote_of_the_day_plugin_domain'); ?>">
@@ -148,6 +146,13 @@ function quote_of_the_day_plugin_settings_page()
 }
 
 
+// Register plugin settings
+function quote_of_the_day_register_settings()
+{
+	register_setting('quote_settings_group', 'quote_menu_enabled');
+	register_setting('quote_settings_group', 'quote_widget_enabled');
+}
+add_action('admin_init', 'quote_of_the_day_register_settings');
 
 /////////////////////////////////////////////////////////
 // Enqueue JavaScript for the toggle button
@@ -253,18 +258,6 @@ function quote_of_the_day_plugin_shortcode_settings_page()
 		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 		<p><?php esc_html_e('Copy the following shortcode to display the quote on any page or post:', 'quote_of_the_day_plugin_domain'); ?></p>
 		<code>[quote_of_the_day]</code>
-	</div>
-<?php
-}
-
-// Subpage 3: Localisation Support Settings Callback
-function quote_of_the_day_plugin_localisation_settings_page()
-{
-?>
-	<div class="wrap">
-		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-		<p><?php esc_html_e('The Quote of the Day plugin provides localisation support. You can translate the plugin into different languages by providing translation files (.mo and .po).', 'quote_of_the_day_plugin_domain'); ?></p>
-		<!-- Add your localisation settings page HTML here -->
 	</div>
 	<?php
 }
