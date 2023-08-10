@@ -47,8 +47,8 @@ defined('ABSPATH') or die("Hello there");
 // add_action('admin_enqueue_scripts', 'quote_of_the_day_plugin_enqueue_styles');
 
 ///////////////////////////////////////////////////////
-// Create the admin panel page and subpages
-function quote_of_the_day_plugin_admin_menu()
+// Create the admin menu Quote Settings page and subpages
+function quote_of_the_day_plugin_quote_settings()
 {
 	// Main Settings Page
 	add_menu_page(
@@ -56,7 +56,7 @@ function quote_of_the_day_plugin_admin_menu()
 		'Quote Settings',
 		'manage_options',
 		'quote-of-the-day-settings',
-		'quote_of_the_day_plugin_settings_page',
+		'quote_of_the_day_plugin_quote_settings_page',
 		'dashicons-admin-generic', // Icon
 		100 // Position in the admin menu
 	);
@@ -84,11 +84,11 @@ function quote_of_the_day_plugin_admin_menu()
 	// Enqueue JavaScript for the toggle button
 	add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
 }
-add_action('admin_menu', 'quote_of_the_day_plugin_admin_menu');
+add_action('admin_menu', 'quote_of_the_day_plugin_quote_settings');
 
 ///////////////////////////////////////////////////
 // Main Settings Page Callback
-function quote_of_the_day_plugin_settings_page()
+function quote_of_the_day_plugin_quote_settings_page()
 {
 	// Get the current options from the database
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
@@ -145,17 +145,16 @@ function quote_of_the_day_plugin_settings_page()
 <?php
 }
 
-
-// Register plugin settings
-function quote_of_the_day_register_settings()
-{
-	register_setting('quote_settings_group', 'quote_menu_enabled');
-	register_setting('quote_settings_group', 'quote_widget_enabled');
-}
-add_action('admin_init', 'quote_of_the_day_register_settings');
+// // Register plugin settings
+// function quote_of_the_day_register_settings()
+// {
+// 	register_setting('quote_settings_group', 'quote_menu_enabled');
+// 	register_setting('quote_settings_group', 'quote_widget_enabled');
+// }
+// add_action('admin_init', 'quote_of_the_day_register_settings');
 
 /////////////////////////////////////////////////////////
-// Enqueue JavaScript for the toggle button
+// Enqueue JavaScript for the toggle buttons in Quote Settings
 function quote_of_the_day_toggle_menu_js($hook)
 {
 	if ($hook === 'toplevel_page_quote-of-the-day-settings') {
@@ -164,7 +163,7 @@ function quote_of_the_day_toggle_menu_js($hook)
 		wp_enqueue_script('bootstrap-switch', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js', array('jquery'), '3.3.4', true);
 
 		// Enqueue your custom JavaScript
-		wp_enqueue_script('quote-of-the-day-toggle-menu', plugin_dir_url(__FILE__) . 'toggle-menu.js', array('jquery'), '1.0', true);
+		wp_enqueue_script('quote-of-the-day-toggle-menu', plugin_dir_url(__FILE__) . 'admin/js/toggle-menu.js', array('jquery'), '1.0', true);
 	}
 }
 
@@ -291,25 +290,25 @@ function quote_of_the_day_plugin_get_random_quote()
 }
 
 
-// Schedule the quote update every hour
-function quote_of_the_day_plugin_schedule_hourly_event()
-{
-	if (!wp_next_scheduled('quote_of_the_day_update')) {
-		wp_schedule_event(time(), 'hourly', 'quote_of_the_day_update');
-	}
-}
-add_action('wp', 'quote_of_the_day_plugin_schedule_hourly_event');
+// // Schedule the quote update every hour - ??
+// function quote_of_the_day_plugin_schedule_hourly_event()
+// {
+// 	if (!wp_next_scheduled('quote_of_the_day_update')) {
+// 		wp_schedule_event(time(), 'hourly', 'quote_of_the_day_update');
+// 	}
+// }
+// add_action('wp', 'quote_of_the_day_plugin_schedule_hourly_event');
 
-// Update the quote on the scheduled event
-function quote_of_the_day_plugin_update_quote()
-{
-	// Get a new random quote
-	$new_quote = quote_of_the_day_plugin_get_random_quote();
+// // Update the quote on the scheduled event - ??
+// function quote_of_the_day_plugin_update_quote()
+// {
+// 	// Get a new random quote
+// 	$new_quote = quote_of_the_day_plugin_get_random_quote();
 
-	// Update the quote in the database (you can store it as an option or in the database)
-	update_option('quote_of_the_day', $new_quote);
-}
-add_action('quote_of_the_day_update', 'quote_of_the_day_plugin_update_quote');
+// 	// Update the quote in the database (you can store it as an option or in the database)
+// 	update_option('quote_of_the_day', $new_quote);
+// }
+// add_action('quote_of_the_day_update', 'quote_of_the_day_plugin_update_quote');
 
 
 // Create the Quote of the Day Widget
@@ -441,8 +440,8 @@ function quote_of_the_day_plugin_quotes_page()
 	<?php
 }
 
-// Create the admin panel page for managing quotes
-function quote_of_the_day_manage_quotes_menu()
+// Create the admin panel Quotes Management page
+function quote_of_the_day_plugin_quotes_management()
 {
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
 
@@ -460,7 +459,7 @@ function quote_of_the_day_manage_quotes_menu()
 		remove_menu_page('quote-of-the-day-quotes');
 	}
 }
-add_action('admin_menu', 'quote_of_the_day_manage_quotes_menu');
+add_action('admin_menu', 'quote_of_the_day_plugin_quotes_management');
 
 
 // Callback function to display the quotes management page
