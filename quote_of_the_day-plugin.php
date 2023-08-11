@@ -44,3 +44,4 @@ require_once plugin_dir_path(__FILE__) . 'model/QuotesSettingsModel.php';
 require_once plugin_dir_path(__FILE__) . 'model/QuotesWidgetModel.php';
 require_once plugin_dir_path(__FILE__) . 'model/QuotesManagementModel.php';
 require_once plugin_dir_path(__FILE__) . 'controller/QuoteSettingsController.php';
+require_once plugin_dir_path(__FILE__) . 'controller/QuoteWidgetController.php';
