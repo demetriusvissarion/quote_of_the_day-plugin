@@ -46,104 +46,10 @@ defined('ABSPATH') or die("Hello there");
 // }
 // add_action('admin_enqueue_scripts', 'quote_of_the_day_plugin_enqueue_styles');
 
-///////////////////////////////////////////////////////
-// Create the admin menu Quote Settings page and subpages
-function quote_of_the_day_plugin_quote_settings()
-{
-	// Main Settings Page
-	add_menu_page(
-		'Quote Settings',
-		'Quote Settings',
-		'manage_options',
-		'quote-of-the-day-settings',
-		'quote_of_the_day_plugin_quote_settings_page',
-		'dashicons-admin-generic', // Icon
-		100 // Position in the admin menu
-	);
-
-	// Subpage 1: Duration Settings
-	add_submenu_page(
-		'quote-of-the-day-settings',
-		'Duration',
-		'Duration',
-		'manage_options',
-		'quote-of-the-day-duration-settings',
-		'quote_of_the_day_plugin_duration_settings_page'
-	);
-
-	// Subpage 2: Short Code Settings
-	add_submenu_page(
-		'quote-of-the-day-settings',
-		'Short Code',
-		'Short Code',
-		'manage_options',
-		'quote-of-the-day-shortcode-settings',
-		'quote_of_the_day_plugin_shortcode_settings_page'
-	);
-
-	// Enqueue JavaScript for the toggle button
-	add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
-}
-add_action('admin_menu', 'quote_of_the_day_plugin_quote_settings');
-
-///////////////////////////////////////////////////
-// Main Settings Page Callback
-function quote_of_the_day_plugin_quote_settings_page()
-{
-	// Get the current options from the database
-	$quote_menu_enabled = get_option('quote_menu_enabled', true);
-	$quote_widget_enabled = get_option('quote_widget_enabled', true);
-
-	// Check if the form was submitted
-	if (isset($_POST['submit'])) {
-		// Check if there are changes
-		if (isset($_POST['quote_menu_enabled']) || isset($_POST['quote_widget_enabled'])) {
-			// Update the options in the database
-			update_option('quote_menu_enabled', $_POST['quote_menu_enabled'] ? true : false);
-			update_option('quote_widget_enabled', $_POST['quote_widget_enabled'] ? true : false);
-
-			add_settings_error('quote_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
-		} else {
-			add_settings_error('quote_settings', 'no_changes', __('No changes were made.', 'quote_of_the_day_plugin_domain'), 'error');
-		}
-
-		$quote_menu_enabled = get_option('quote_menu_enabled', true);
-		$quote_widget_enabled = get_option('quote_widget_enabled', true);
-	}
-?>
-	<div class="wrap">
-		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-		<p><?php esc_html_e('Welcome to the Quote Settings! Here you can manage various options for the Quote of the Day plugin.', 'quote_of_the_day_plugin_domain'); ?></p>
-
-		<form method="post" action="">
-			<?php wp_nonce_field('quote_settings_nonce', 'quote_settings_nonce'); ?>
-
-			<!-- ON/OFF switch button for Quotes Management Menu -->
-			<p>
-				<label class="bootstrap-switch-label">
-					<input type="hidden" name="quote_menu_enabled" value="0">
-					<input type="checkbox" id="quote_menu_enabled" name="quote_menu_enabled" value="1" <?php checked($quote_menu_enabled, true); ?>>
-					<?php esc_html_e('Quotes Management Menu', 'quote_of_the_day_plugin_domain'); ?>
-				</label>
-			</p>
-
-			<!-- ON/OFF switch button for Quotes Widget -->
-			<p>
-				<label class="bootstrap-switch-label">
-					<input type="hidden" name="quote_widget_enabled" value="0">
-					<input type="checkbox" id="quote_widget_enabled" name="quote_widget_enabled" value="1" <?php checked($quote_widget_enabled, true); ?>>
-					<?php esc_html_e('Quotes Widget', 'quote_of_the_day_plugin_domain'); ?>
-				</label>
-			</p>
-
-			<p class="submit">
-				<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save Changes', 'quote_of_the_day_plugin_domain'); ?>">
-			</p>
-		</form>
-		<?php settings_errors('quote_settings'); ?>
-	</div>
-<?php
-}
+// Include other plugin files
+// plugin_dir_url( __FILE__ ).'/your/path/to/file.ext
+require_once plugin_dir_path(__FILE__) . 'controller/Controller.php';
+require_once plugin_dir_path(__FILE__) . 'model/Model.php';
 
 // // Register plugin settings
 // function quote_of_the_day_register_settings()
@@ -163,7 +69,7 @@ function quote_of_the_day_toggle_menu_js($hook)
 		wp_enqueue_script('bootstrap-switch', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js', array('jquery'), '3.3.4', true);
 
 		// Enqueue your custom JavaScript
-		wp_enqueue_script('quote-of-the-day-toggle-menu', plugin_dir_url(__FILE__) . 'admin/js/toggle-menu.js', array('jquery'), '1.0', true);
+		wp_enqueue_script('quote-of-the-day-toggle-menu', plugin_dir_url(__FILE__) . 'toggle-menu.js', array('jquery'), '1.0', true);
 	}
 }
 
