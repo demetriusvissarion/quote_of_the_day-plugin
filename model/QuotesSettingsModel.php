@@ -5,8 +5,8 @@
  */
 
 
-/////////////////////////////////////////////////////// => QuoteSettingsModel.php
-// Create the admin menu Quote Settings page and subpages
+/////////////////////////////////////////////////////// => QuotesSettingsModel.php
+// Create the admin menu "Quote Settings" page and subpages
 function quote_of_the_day_plugin_quote_settings()
 {
 	// Main Settings Page
@@ -39,15 +39,11 @@ function quote_of_the_day_plugin_quote_settings()
 		'quote-of-the-day-shortcode-settings',
 		'quote_of_the_day_plugin_shortcode_settings_page'
 	);
-
-	// Enqueue JavaScript for the toggle button
-	add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
 }
-add_action('admin_menu', 'quote_of_the_day_plugin_quote_settings');
 ///////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////// => QuoteSettingsModel.php
-// Quote Settings Page Callback
+/////////////////////////////////////////////////// => QuotesSettingsModel.php
+// "Quote Settings" Page Callback
 function quote_of_the_day_plugin_quote_settings_page()
 {
 	// Get the current options from the database
@@ -73,8 +69,8 @@ function quote_of_the_day_plugin_quote_settings_page()
 	require_once plugin_dir_path(__FILE__) . '../view/quote_settings.php';
 }
 
-///////////////////////////////////////////////////////// => QuoteSettingsModel.php
-// Enqueue JavaScript for the toggle buttons in Quote Settings
+///////////////////////////////////////////////////////// => QuotesSettingsModel.php
+// Enqueue JavaScript for the toggle buttons in the "Quote Settings" page
 function quote_of_the_day_toggle_menu_js($hook)
 {
 	if ($hook === 'toplevel_page_quote-of-the-day-settings') {
@@ -87,22 +83,8 @@ function quote_of_the_day_toggle_menu_js($hook)
 	}
 }
 
-// Enqueue the toggle menu JavaScript in the existing function
-add_action('admin_enqueue_scripts', 'quote_of_the_day_toggle_menu_js');
-
-
-////////////////////////////////////////////////////// => QuoteSettingsModel.php
+////////////////////////////////////////////////////// => QuotesSettingsModel.php
 // Subpage 1: Duration Settings Callback
-function quote_of_the_day_plugin_duration_settings_page()
-{
-	// Check if settings were saved and display a success message
-	if (isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true') {
-		add_settings_error('quote_duration_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
-	}
-
-	require_once plugin_dir_path(__FILE__) . '../view/duration.php';
-}
-
 function quote_of_the_day_plugin_register_duration_settings()
 {
 	add_settings_section(
@@ -140,53 +122,4 @@ function quote_of_the_day_plugin_register_duration_settings()
 	);
 
 	register_setting('quote_of_the_day_duration_group', 'quote_duration', 'quote_of_the_day_validate_duration');
-}
-add_action('admin_init', 'quote_of_the_day_plugin_register_duration_settings');
-
-function quote_of_the_day_plugin_duration_section_callback()
-{
-	echo '<p>' . __('Set the duration for changing the quote:', 'quote_of_the_day_plugin_domain') . '</p>';
-}
-
-function quote_of_the_day_plugin_duration_field_callback($args)
-{
-	$duration = get_option('quote_duration', array('day' => 0, 'hour' => 0, 'minute' => 0));
-	$value = isset($duration[$args['unit']]) ? $duration[$args['unit']] : 0;
-
-	echo '<input type="number" min="0" name="quote_duration[' . esc_attr($args['unit']) . ']" value="' . esc_attr($value) . '" />';
-}
-
-///////////////////////////////////////////////////////////////// => QuoteSettingsModel.php
-// Subpage 2: Short Code Settings Callback
-function quote_of_the_day_plugin_shortcode_settings_page()
-{
-	require_once plugin_dir_path(__FILE__) . '../view/short-code.php';
-}
-
-///////////////////////////////////////////////////////////////// => QuoteSettingsModel.php
-// Function to sanitize and display a quote
-function quote_of_the_day_plugin_get_random_quote()
-{
-	// Get quotes from the 'quote' custom post type
-	$args = array(
-		'post_type'      => 'quote',
-		'posts_per_page' => -1,
-	);
-
-	$quote_posts = get_posts($args);
-
-	if (!$quote_posts) {
-		return ''; // Return empty string if no quotes are found
-	}
-
-	// Get a random quote post
-	$random_quote_post = $quote_posts[array_rand($quote_posts)];
-
-	// Get the content of the quote post
-	$quote_content = apply_filters('the_content', $random_quote_post->post_content);
-
-	// Sanitize the quote content before displaying it
-	$sanitized_quote_content = wp_kses_post($quote_content);
-
-	return $sanitized_quote_content;
 }

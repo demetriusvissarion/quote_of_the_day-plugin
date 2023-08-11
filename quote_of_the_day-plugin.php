@@ -40,7 +40,7 @@ SOFTWARE.
 defined('ABSPATH') or die("Hello there");
 
 // Include other plugin files
-require_once plugin_dir_path(__FILE__) . 'controller/Controller.php';
-require_once plugin_dir_path(__FILE__) . 'model/QuoteSettingsModel.php';
-require_once plugin_dir_path(__FILE__) . 'model/WidgetModel.php';
+require_once plugin_dir_path(__FILE__) . 'model/QuotesSettingsModel.php';
+require_once plugin_dir_path(__FILE__) . 'model/QuotesWidgetModel.php';
 require_once plugin_dir_path(__FILE__) . 'model/QuotesManagementModel.php';
+require_once plugin_dir_path(__FILE__) . 'controller/QuoteSettingsController.php';
