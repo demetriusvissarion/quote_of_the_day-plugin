@@ -160,13 +160,7 @@ function quote_of_the_day_plugin_duration_field_callback($args)
 // Subpage 2: Short Code Settings Callback
 function quote_of_the_day_plugin_shortcode_settings_page()
 {
-?>
-	<div class="wrap">
-		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-		<p><?php esc_html_e('Copy the following shortcode to display the quote on any page or post:', 'quote_of_the_day_plugin_domain'); ?></p>
-		<code>[quote_of_the_day]</code>
-	</div>
-	<?php
+	require_once plugin_dir_path(__FILE__) . '../view/short-code.php';
 }
 
 ///////////////////////////////////////////////////////////////// => QuoteSettingsModel.php
@@ -238,19 +232,8 @@ class Quote_Of_The_Day_Plugin_Widget extends WP_Widget
 		$current_quote = isset($instance['quote']) ? $instance['quote'] : '';
 		$widget_option = get_option('quote_widget_enabled', true);
 
-		// Display the widget settings form
-	?>
-		<p>
-			<label for="<?php echo $this->get_field_id('quote'); ?>"><?php esc_html_e('Quote:', 'quote_of_the_day_plugin_domain'); ?></label>
-			<textarea class="widefat" rows="5" cols="20" id="<?php echo $this->get_field_id('quote'); ?>" name="<?php echo $this->get_field_name('quote'); ?>"><?php echo esc_textarea($current_quote); ?></textarea>
-		</p>
-		<p>
-			<label class="bootstrap-switch-label">
-				<input type="checkbox" id="<?php echo $this->get_field_id('widget_enabled'); ?>" name="<?php echo $this->get_field_name('widget_enabled'); ?>" value="1" <?php checked($widget_option, true); ?>>
-				<?php esc_html_e('Quotes Widget', 'quote_of_the_day_plugin_domain'); ?>
-			</label>
-		</p>
-	<?php
+		// Display the widget form
+		require_once plugin_dir_path(__FILE__) . '../view/widget.php';
 	}
 
 
@@ -337,7 +320,7 @@ function quote_of_the_day_manage_quotes_page()
 	$quote_menu_enabled = get_option('quote_menu_enabled', true);
 
 	if ($quote_menu_enabled) {
-	?>
+?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php echo esc_html__('Quotes', 'quote_of_the_day_plugin_domain'); ?></h1>
 			<a href="<?php echo admin_url('post-new.php?post_type=quote'); ?>" class="page-title-action">
