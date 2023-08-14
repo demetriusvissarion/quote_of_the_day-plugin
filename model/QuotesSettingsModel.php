@@ -159,4 +159,4 @@ class QuotesSettingsModel
 }
 
 // Instantiate the Quotes Settings Model
-$model = new QuotesSettingsModel();
+$settings_model = new QuotesSettingsModel();
