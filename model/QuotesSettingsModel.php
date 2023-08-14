@@ -8,11 +8,6 @@
 ///////////////////////////////////////////////////////
 class QuotesSettingsModel
 {
-	// public function __construct()
-	// {
-	// 	add_action('admin_menu', array($this, 'quote_of_the_day_plugin_quote_settings'));
-	// }
-
 	// Create the admin menu "Quote Settings" page and subpages
 	public function quote_of_the_day_plugin_quote_settings()
 	{
@@ -47,6 +42,40 @@ class QuotesSettingsModel
 			array($this, 'quote_of_the_day_plugin_shortcode_settings_page'),
 		);
 	}
+
+	/////////////////////////////////////////////////////////////////
+	// Subpage 1: Duration Settings Callback
+	public function quote_of_the_day_plugin_duration_settings_page()
+	{
+		// Check if settings were saved and display a success message
+		if (isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true') {
+			add_settings_error('quote_duration_settings', 'settings_updated', __('Changes saved.', 'quote_of_the_day_plugin_domain'), 'updated');
+		}
+
+		require_once plugin_dir_path(__FILE__) . '../view/duration.php';
+	}
+
+	public function quote_of_the_day_plugin_duration_section_callback()
+	{
+		echo '<p>' . __('Set the duration for changing the quote:', 'quote_of_the_day_plugin_domain') . '</p>';
+	}
+
+	public function quote_of_the_day_plugin_duration_field_callback($args)
+	{
+		$duration = get_option('quote_duration', array('day' => 0, 'hour' => 0, 'minute' => 0));
+		$value = isset($duration[$args['unit']]) ? $duration[$args['unit']] : 0;
+
+		echo '<input type="number" min="0" name="quote_duration[' . esc_attr($args['unit']) . ']" value="' . esc_attr($value) . '" />';
+	}
+	/////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////
+	// Subpage 2: Short Code Settings Callback
+	public function quote_of_the_day_plugin_shortcode_settings_page()
+	{
+		require_once plugin_dir_path(__FILE__) . '../view/short-code.php';
+	}
+	/////////////////////////////////////////////////////////////////
 
 	// "Quote Settings" Page Callback
 	public function quote_of_the_day_plugin_quote_settings_page()
@@ -87,21 +116,21 @@ class QuotesSettingsModel
 		}
 	}
 
-	////////////////////////////////////////////////////// => QuotesSettingsModel.php
+	//////////////////////////////////////////////////////
 	// Subpage 1: Duration Settings Callback
 	public function quote_of_the_day_plugin_register_duration_settings()
 	{
 		add_settings_section(
 			'quote_of_the_day_duration_section',
 			__('', 'quote_of_the_day_plugin_domain'),
-			'quote_of_the_day_plugin_duration_section_callback',
+			array($this, 'quote_of_the_day_plugin_duration_section_callback'),
 			'quote-of-the-day-duration-settings'
 		);
 
 		add_settings_field(
 			'quote_duration_days',
 			__('Quote Display Duration (Days)', 'quote_of_the_day_plugin_domain'),
-			'quote_of_the_day_plugin_duration_field_callback',
+			array($this, 'quote_of_the_day_plugin_duration_field_callback'),
 			'quote-of-the-day-duration-settings',
 			'quote_of_the_day_duration_section',
 			array('unit' => 'day')
@@ -110,7 +139,7 @@ class QuotesSettingsModel
 		add_settings_field(
 			'quote_duration_hours',
 			__('Quote Display Duration (Hours)', 'quote_of_the_day_plugin_domain'),
-			'quote_of_the_day_plugin_duration_field_callback',
+			array($this, 'quote_of_the_day_plugin_duration_field_callback'),
 			'quote-of-the-day-duration-settings',
 			'quote_of_the_day_duration_section',
 			array('unit' => 'hour')
@@ -119,7 +148,7 @@ class QuotesSettingsModel
 		add_settings_field(
 			'quote_duration_minutes',
 			__('Quote Display Duration (Minutes)', 'quote_of_the_day_plugin_domain'),
-			'quote_of_the_day_plugin_duration_field_callback',
+			array($this, 'quote_of_the_day_plugin_duration_field_callback'),
 			'quote-of-the-day-duration-settings',
 			'quote_of_the_day_duration_section',
 			array('unit' => 'minute')
@@ -129,5 +158,5 @@ class QuotesSettingsModel
 	}
 }
 
-// // Instantiate the model
-// new QuotesSettingsModel();
+// Instantiate the Quotes Settings Model
+$model = new QuotesSettingsModel();
