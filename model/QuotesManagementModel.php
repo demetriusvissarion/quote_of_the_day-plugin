@@ -54,7 +54,7 @@ class QuotesManagementModel
 			'Quotes Management',                // Menu Title
 			'manage_options',
 			'quote-of-the-day-quotes', // Menu Slug
-			'quote_of_the_day_manage_quotes_page', // Callback function to display the content
+			array($this, 'quote_of_the_day_manage_quotes_page'), // Callback function to display the content
 			'dashicons-format-quote', // Icon
 			30 // Position in the admin menu
 		);

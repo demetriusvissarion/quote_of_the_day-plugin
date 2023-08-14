@@ -39,7 +39,7 @@ class Quote_Of_The_Day_Plugin_Widget extends WP_Widget
 		}
 	}
 
-	public function form($instance)
+	public function widget_form($instance)
 	{
 		// Retrieve the currently saved widget settings
 		$current_quote = isset($instance['quote']) ? $instance['quote'] : '';
