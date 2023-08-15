@@ -75,6 +75,14 @@ class QuotesSettingsModel
 	{
 		require_once plugin_dir_path(__FILE__) . '../view/short-code.php';
 	}
+
+	public function widget_form()
+	{
+		ob_start();
+		require_once plugin_dir_path(__FILE__) . '../view/short-code.php';
+		return ob_get_clean();
+	}
+
 	/////////////////////////////////////////////////////////////////
 
 	// "Quote Settings" Page Callback

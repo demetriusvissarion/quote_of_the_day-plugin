@@ -24,6 +24,9 @@ class QuoteSettingsController
 
 		// Enqueue the toggle menu JavaScript in the existing function
 		add_action('admin_enqueue_scripts', array($settings_model, 'quote_of_the_day_toggle_menu_js'));
+
+		// Add shortcode
+		add_shortcode('demetrius1-widget-form', array($this, 'widget_form'));
 	}
 }
 
